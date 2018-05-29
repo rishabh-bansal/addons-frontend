@@ -82,6 +82,8 @@ describe(__filename, () => {
 
       let state = reducer(initialState, editUserAccount({
         errorHandlerId: 'fake-error-id',
+        notifications: {},
+        picture: null,
         userFields,
         userId: user.id,
       }));
@@ -98,6 +100,8 @@ describe(__filename, () => {
 
       const state = reducer(initialState, editUserAccount({
         errorHandlerId: 'fake-error-id',
+        notifications: {},
+        picture: null,
         userFields,
         userId: user.id,
       }));

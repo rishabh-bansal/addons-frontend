@@ -13,6 +13,7 @@ import {
   currentUserAccount as currentUserAccountApi,
   deleteUserPicture as deleteUserPictureApi,
   editUserAccount as editUserAccountApi,
+  updateUserNotifications as updateUserNotificationsApi,
   userAccount as userAccountApi,
   userNotifications as userNotificationsApi,
 } from 'amo/api/users';
@@ -42,6 +43,7 @@ export function* fetchCurrentUserAccount({ payload }) {
 export function* editUserAccount({
   payload: {
     errorHandlerId,
+    notifications,
     picture,
     userFields,
     userId,
@@ -62,6 +64,19 @@ export function* editUserAccount({
     });
 
     yield put(loadUserAccount({ user }));
+
+    if (Object.keys(notifications).length) {
+      const allNotifications = yield call(updateUserNotificationsApi, {
+        api: state.api,
+        notifications,
+        userId,
+      });
+
+      yield put(loadUserNotifications({
+        notifications: allNotifications,
+        username: user.username,
+      }));
+    }
   } catch (error) {
     log.warn(`Could not edit user account: ${error}`);
     yield put(errorHandler.createErrorAction(error));

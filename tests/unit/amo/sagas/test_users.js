@@ -137,6 +137,8 @@ describe(__filename, () => {
 
       sagaTester.dispatch(editUserAccount({
         errorHandlerId: errorHandler.id,
+        notifications: {},
+        picture: null,
         userFields,
         userId: user.id,
       }));
@@ -162,7 +164,7 @@ describe(__filename, () => {
       expect(calledFinishAction.payload).toEqual({});
     });
 
-    it('optionally takes a picture file', async () => {
+    it('can receive a picture file in payload', async () => {
       const state = sagaTester.getState();
       const user = createUserAccountResponse({ id: 5001 });
 
@@ -185,6 +187,7 @@ describe(__filename, () => {
 
       sagaTester.dispatch(editUserAccount({
         errorHandlerId: errorHandler.id,
+        notifications: {},
         picture,
         userFields,
         userId: user.id,
@@ -198,6 +201,63 @@ describe(__filename, () => {
 
       mockApi.verify();
       expect(calledAction).toEqual(expectedCalledAction);
+    });
+
+    it('can receive a non-empty notifications object (dict) in payload', async () => {
+      const state = sagaTester.getState();
+
+      const username = 'babar';
+      const user = createUserAccountResponse({ id: 5001, username });
+
+      const notifications = {
+        reply: false,
+      };
+      const allNotifications = createUserNotificationsResponse();
+      allNotifications[0].enabled = notifications.reply;
+
+      const userFields = {
+        biography: 'I fell into a burning ring of fire.',
+        location: 'Folsom Prison',
+      };
+
+      mockApi
+        .expects('editUserAccount')
+        .withArgs({
+          api: state.api,
+          picture: null,
+          userId: user.id,
+          ...userFields,
+        })
+        .once()
+        .returns(Promise.resolve({ ...user, ...userFields }));
+
+      mockApi
+        .expects('updateUserNotifications')
+        .withArgs({
+          api: state.api,
+          notifications,
+          userId: user.id,
+        })
+        .once()
+        .returns(Promise.resolve(allNotifications));
+
+      sagaTester.dispatch(editUserAccount({
+        errorHandlerId: errorHandler.id,
+        notifications,
+        picture: null,
+        userFields,
+        userId: user.id,
+      }));
+
+      const expectedCalledAction = loadUserNotifications({
+        notifications: allNotifications,
+        username,
+      });
+
+      const calledAction = await sagaTester.waitFor(expectedCalledAction.type);
+
+      expect(calledAction).toEqual(expectedCalledAction);
+      mockApi.verify();
     });
 
     it('cancels the edit and dispatches an error when fails', async () => {
@@ -214,6 +274,8 @@ describe(__filename, () => {
 
       sagaTester.dispatch(editUserAccount({
         errorHandlerId: errorHandler.id,
+        notifications: {},
+        picture: null,
         userFields,
         userId: user.id,
       }));
@@ -276,6 +338,10 @@ describe(__filename, () => {
   describe('fetchUserNotifications', () => {
     it('calls the API to fetch the notifications of a user', async () => {
       const username = 'tofumatt';
+
+      const user = createUserAccountResponse({ username });
+      sagaTester.dispatch(loadCurrentUserAccount({ user }));
+
       const notifications = createUserNotificationsResponse();
 
       mockApi

@@ -98,6 +98,7 @@ describe(__filename, () => {
 
   function _editUserAccount({
     store,
+    notifications = {},
     picture = null,
     userFields = {},
     userId = 'user-id',
@@ -105,6 +106,7 @@ describe(__filename, () => {
   }) {
     store.dispatch(editUserAccount({
       errorHandlerId,
+      notifications,
       picture,
       userFields,
       userId,
@@ -470,6 +472,7 @@ describe(__filename, () => {
 
     sinon.assert.calledWith(dispatchSpy, editUserAccount({
       errorHandlerId: errorHandler.id,
+      notifications: {},
       picture: null,
       userFields: {
         biography: user.biography,
@@ -562,6 +565,7 @@ describe(__filename, () => {
 
     sinon.assert.calledWith(dispatchSpy, editUserAccount({
       errorHandlerId: errorHandler.id,
+      notifications: {},
       picture: null,
       userFields: {
         biography: user.biography,
@@ -1008,6 +1012,53 @@ describe(__filename, () => {
       const params = { username };
 
       expect(extractId({ params })).toEqual(username);
+    });
+  });
+
+  it('stores updated notifications in state', () => {
+    const { store } = signInUserWithUsername('tofumatt');
+    const root = renderUserProfileEdit({ store });
+
+    expect(root).toHaveState('notifications', {});
+
+    const onChange = root.find(UserProfileEditNotifications).prop('onChange');
+    const stopPropagationSpy = sinon.spy();
+
+    onChange(createFakeEvent({
+      currentTarget: {
+        name: 'reply',
+        checked: false,
+      },
+      stopPropagation: stopPropagationSpy,
+    }));
+
+    sinon.assert.called(stopPropagationSpy);
+
+    expect(root).toHaveState('notifications', { reply: false });
+    expect(root).toHaveState('successMessage', null);
+
+    onChange(createFakeEvent({
+      currentTarget: {
+        name: 'new_features',
+        checked: false,
+      },
+    }));
+
+    expect(root).toHaveState('notifications', {
+      new_features: false,
+      reply: false,
+    });
+
+    onChange(createFakeEvent({
+      currentTarget: {
+        name: 'reply',
+        checked: true,
+      },
+    }));
+
+    expect(root).toHaveState('notifications', {
+      new_features: false,
+      reply: true,
     });
   });
 });
