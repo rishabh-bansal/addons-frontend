@@ -430,6 +430,13 @@ export class UserProfileEditBase extends React.Component<Props, State> {
                             startLink: '<a href="https://support.mozilla.org/kb/change-primary-email-address-firefox-accounts">',
                             endLink: '</a>',
                           }
+                          i18n.sprintf(
+                          i18n.gettext(`%(startLink)sManage Firefox Account...?%(endLink)s`
+                          ),
+                          {
+                            startLink: '<a href="https://accounts.firefox.com/settings">',
+                            endLink: '</a>',
+                          }
                         ), ['a'])
                     }
                   />
